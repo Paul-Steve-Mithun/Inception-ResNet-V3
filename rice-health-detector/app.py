@@ -8,8 +8,17 @@ import io
 from torchvision.models import inception_v3
 import os
 
-app = Flask(__name__, static_folder='static', static_url_path='')
+app = Flask(__name__, 
+    static_folder='static',
+    static_url_path=''
+)
 CORS(app)
+
+# Cache control
+@app.after_request
+def add_header(response):
+    response.cache_control.max_age = 300
+    return response
 
 # Global variables
 model = None
@@ -18,12 +27,17 @@ device = torch.device("cpu")
 def load_model():
     global model
     if model is None:
-        model = inception_v3(weights=None)
-        model.fc = torch.nn.Linear(model.fc.in_features, 4)
-        MODEL_PATH = "nitrogenrice_model_latest.pth"
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-        model.eval()
-        model = model.to(device)
+        try:
+            model = inception_v3(weights=None)
+            model.fc = torch.nn.Linear(model.fc.in_features, 4)
+            MODEL_PATH = "nitrogenrice_model_latest.pth"
+            model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+            model.eval()
+            model = model.to(device)
+            print("Model loaded successfully")
+        except Exception as e:
+            print(f"Error loading model: {str(e)}")
+            raise
     return model
 
 # Define class labels
@@ -39,8 +53,11 @@ def preprocess_image(img):
     img = transform(img).unsqueeze(0)
     return img.to(device)
 
-@app.route('/')
-def serve():
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/predict', methods=['POST'])
@@ -62,7 +79,8 @@ def predict():
         confidence = probabilities[0][predicted_class_index].item()
 
         # Clear some memory
-        torch.cuda.empty_cache() if torch.cuda.is_available() else None
+        if hasattr(torch, 'cuda'):
+            torch.cuda.empty_cache()
 
         return jsonify({
             "prediction": predicted_class,
@@ -74,4 +92,5 @@ def predict():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
