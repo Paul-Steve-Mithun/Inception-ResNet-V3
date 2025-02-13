@@ -11,16 +11,20 @@ import os
 app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app)
 
-# Initialize model architecture
-model = inception_v3(weights=None)
-model.fc = torch.nn.Linear(model.fc.in_features, 4)  # 4 classes
+# Global variables
+model = None
+device = torch.device("cpu")
 
-# Load the trained model state
-MODEL_PATH = "nitrogenrice_model_latest.pth"
-device = torch.device("cpu")  # Force CPU usage
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-model.eval()  # Set to evaluation mode
-model = model.to(device)
+def load_model():
+    global model
+    if model is None:
+        model = inception_v3(weights=None)
+        model.fc = torch.nn.Linear(model.fc.in_features, 4)
+        MODEL_PATH = "nitrogenrice_model_latest.pth"
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+        model.eval()
+        model = model.to(device)
+    return model
 
 # Define class labels
 CLASS_LABELS = ["Nitrogen Deficient : Class 1", "Nitrogen Deficient : Class 2", "Nitrogen Deficient : Class 3", "Nitrogen Deficient : Class 4"]
@@ -32,7 +36,7 @@ def preprocess_image(img):
         transforms.Normalize(mean=[0.485, 0.456, 0.406], 
                            std=[0.229, 0.224, 0.225])
     ])
-    img = transform(img).unsqueeze(0)  # Add batch dimension
+    img = transform(img).unsqueeze(0)
     return img.to(device)
 
 @app.route('/')
@@ -42,6 +46,9 @@ def serve():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # Load model only when needed
+        model = load_model()
+        
         file = request.files['image']
         img = Image.open(io.BytesIO(file.read())).convert('RGB')
         processed_image = preprocess_image(img)
@@ -54,9 +61,12 @@ def predict():
         predicted_class = CLASS_LABELS[predicted_class_index]
         confidence = probabilities[0][predicted_class_index].item()
 
+        # Clear some memory
+        torch.cuda.empty_cache() if torch.cuda.is_available() else None
+
         return jsonify({
             "prediction": predicted_class,
-            "confidence": float(confidence)  # Convert to float for JSON serialization
+            "confidence": float(confidence)
         })
 
     except Exception as e:

@@ -5,4 +5,4 @@ torch==2.0.1+cpu
 torchvision==0.15.2+cpu
 pillow>=9.5.0
 numpy>=1.24.3
-gunicorn>=20.1.0 
+gunicorn>=20.1.0
