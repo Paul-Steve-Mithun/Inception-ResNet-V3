@@ -44,7 +44,7 @@ function Home() {
             Rice Plant Health Detector
           </h1>
           <p className="text-gray-600 mb-4">
-            Powered by Inception ResNet V2
+            Powered by Inception ResNet V3
           </p>
           <div className="bg-white rounded-lg p-6 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-3">About the Model</h2>
