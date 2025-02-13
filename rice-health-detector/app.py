@@ -12,12 +12,12 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app)
 
 # Initialize model architecture
-model = inception_v3(pretrained=False)
+model = inception_v3(weights=None)
 model.fc = torch.nn.Linear(model.fc.in_features, 4)  # 4 classes
 
 # Load the trained model state
 MODEL_PATH = "nitrogenrice_model_latest.pth"
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")  # Force CPU usage
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.eval()  # Set to evaluation mode
 model = model.to(device)

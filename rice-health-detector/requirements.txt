@@ -1,7 +1,8 @@
-flask==2.0.1
-flask-cors==3.0.10
-torch==2.0.1
-torchvision==0.15.2
-pillow==9.5.0
-numpy==1.24.3
-gunicorn==20.1.0 
+flask>=2.0.1
+flask-cors>=3.0.10
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==2.0.1+cpu
+torchvision==0.15.2+cpu
+pillow>=9.5.0
+numpy>=1.24.3
+gunicorn>=20.1.0 
