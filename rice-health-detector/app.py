@@ -9,7 +9,7 @@ from torchvision.models import inception_v3
 import os
 
 app = Flask(__name__, 
-    static_folder='static',
+    static_folder='client/dist',
     static_url_path=''
 )
 CORS(app)
