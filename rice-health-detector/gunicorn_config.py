@@ -1,13 +1,13 @@
 import os
 
 # Worker configurations
-workers = 1
+workers = 4
 threads = 4
 worker_class = 'gthread'
 worker_connections = 1000
 
 # Timeout configurations
-timeout = 300
+timeout = 120
 keepalive = 2
 
 # Logging
@@ -20,4 +20,4 @@ max_requests = 100
 max_requests_jitter = 10
 
 # Server configurations
-bind = f"0.0.0.0:{os.getenv('PORT', '5000')}" 
+bind = "0.0.0.0:10000" 
