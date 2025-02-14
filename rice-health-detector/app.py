@@ -28,7 +28,7 @@ def load_model():
     global model
     if model is None:
         try:
-            model = inception_v3(weights=None)
+            model = inception_v3(weights=None, init_weights=True)
             model.fc = torch.nn.Linear(model.fc.in_features, 4)
             MODEL_PATH = "nitrogenrice_model_latest.pth"
             model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
